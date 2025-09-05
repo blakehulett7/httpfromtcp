@@ -2,21 +2,23 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 )
 
 func main() {
-	const file_path = "./messages.txt"
-
-	messages, err := os.Open(file_path)
+	file, err := os.Open("messages.txt")
 	if err != nil {
-		fmt.Printf("can't open %v, err: %v\n", file_path, err)
-		return
+		panic(err)
 	}
-	defer messages.Close()
 
-	channel := getLinesChannel(messages)
-	for line := range channel {
-		fmt.Printf("read: %s\n", line)
+	bytes := make([]byte, 8)
+	for {
+		_, err = file.Read(bytes)
+		if err == io.EOF {
+			break
+		}
+
+		fmt.Printf("read: %s\n", bytes)
 	}
 }
