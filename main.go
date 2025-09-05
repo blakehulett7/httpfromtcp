@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"os"
-	"strings"
 )
 
 func main() {
@@ -12,29 +10,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer file.Close()
 
-	var line string
-
-	buffer := make([]byte, 8)
-	for {
-		_, err = file.Read(buffer)
-		if err == io.EOF {
-			break
-		}
-
-		parts := strings.Split(string(buffer), "\n")
-
-		for i, part := range parts {
-			if i == len(parts)-1 {
-				line += part
-				break
-			}
-
-			fmt.Printf("read: %s\n", line+part)
-			line = ""
-		}
+	lines_channel := getLinesChannel(file)
+	for line := range lines_channel {
+		fmt.Printf("read: %s\n", line)
 	}
-
-	fmt.Printf("read: %s\n", line)
 }

@@ -1,45 +1,39 @@
 package main
 
 import (
-	"bytes"
-	"fmt"
 	"io"
+	"strings"
 )
 
 func getLinesChannel(file io.ReadCloser) <-chan string {
-	channel := make(chan string)
-	var line string
+	lines_channel := make(chan string)
 
 	go func() {
+		var line string
+		buffer := make([]byte, 8)
 		for {
-			buffer := make([]byte, 8)
 			_, err := file.Read(buffer)
-
 			if err == io.EOF {
 				file.Close()
-				if line != "" {
-					channel <- line
+				break
+			}
+
+			parts := strings.Split(string(buffer), "\n")
+
+			for i, part := range parts {
+				if i == len(parts)-1 {
+					line += part
+					break
 				}
-				close(channel)
-				return
-			}
 
-			if err != nil {
-				fmt.Printf("can't read file, err: %v\n", err)
-			}
-
-			slice := bytes.Split(buffer, []byte("\n"))
-
-			for i := 0; i < len(slice)-1; i++ {
-				part := slice[i]
-				channel <- line + string(part)
+				line += part
+				lines_channel <- line
 				line = ""
 			}
-
-			part := slice[len(slice)-1]
-			line += string(part)
 		}
+		lines_channel <- line
+		close(lines_channel)
 	}()
 
-	return channel
+	return lines_channel
 }
