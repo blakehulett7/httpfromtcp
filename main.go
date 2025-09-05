@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -13,6 +14,8 @@ func main() {
 	}
 	defer file.Close()
 
+	var line string
+
 	bytes := make([]byte, 8)
 	for {
 		_, err = file.Read(bytes)
@@ -20,6 +23,18 @@ func main() {
 			break
 		}
 
-		fmt.Printf("read: %s\n", bytes)
+		parts := strings.Split(string(bytes), "\n")
+
+		for i, part := range parts {
+			if i == len(parts)-1 {
+				line += part
+				break
+			}
+
+			fmt.Printf("read: %s\n", line+part)
+			line = ""
+		}
 	}
+
+	fmt.Printf("read: %s\n", line)
 }
