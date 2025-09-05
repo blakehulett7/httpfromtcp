@@ -3,19 +3,19 @@ package main
 import (
 	"fmt"
 	"io"
-	"net"
 	"strings"
 )
 
-func getLinesChannel(connection net.Conn) <-chan string {
+func getLinesChannel(f io.ReadCloser) <-chan string {
 	lines_channel := make(chan string)
 
 	go func() {
 		var line string
 		buffer := make([]byte, 8)
 		for {
-			_, err := connection.Read(buffer)
-			if err == io.EOF {
+			defer f.Close()
+			_, err := f.Read(buffer)
+			if err != nil {
 				break
 			}
 
@@ -34,7 +34,6 @@ func getLinesChannel(connection net.Conn) <-chan string {
 		}
 		lines_channel <- line
 		close(lines_channel)
-		connection.Close()
 		fmt.Println("Connection closed")
 	}()
 
