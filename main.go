@@ -16,14 +16,14 @@ func main() {
 
 	var line string
 
-	bytes := make([]byte, 8)
+	buffer := make([]byte, 8)
 	for {
-		_, err = file.Read(bytes)
+		_, err = file.Read(buffer)
 		if err == io.EOF {
 			break
 		}
 
-		parts := strings.Split(string(bytes), "\n")
+		parts := strings.Split(string(buffer), "\n")
 
 		for i, part := range parts {
 			if i == len(parts)-1 {
