@@ -7,6 +7,8 @@ import (
 	"unicode"
 )
 
+const buffer_size = 8
+
 type Request struct {
 	RequestLine RequestLine
 }
@@ -18,12 +20,29 @@ type RequestLine struct {
 }
 
 func RequestFromReader(reader io.Reader) (*Request, error) {
-	raw, err := io.ReadAll(reader)
-	if err != nil {
-		return &Request{}, err
+	buffer := make([]byte, buffer_size)
+	read_to_idx := 0
+
+	for !strings.Contains(string(buffer), "\r\n") {
+		if len(buffer) > cap(buffer)/2 {
+			larger_buffer := make([]byte, cap(buffer)*2)
+			copy(larger_buffer, buffer)
+			buffer = larger_buffer
+		}
+
+		bytes_read, err := reader.Read(buffer[read_to_idx:])
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			return &Request{}, err
+		}
+
+		read_to_idx += bytes_read
 	}
 
-	parts := strings.Split(string(raw), "\r\n")
+	parts := strings.Split(string(buffer), "\r\n")
 	raw_request_line := parts[0]
 	request_line, err := parseRequestLine(raw_request_line)
 	if err != nil {
