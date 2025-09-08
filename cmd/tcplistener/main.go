@@ -5,6 +5,8 @@ import (
 	"net"
 	"os"
 	"os/signal"
+
+	"github.com/blakehulett7/httpfromtcp/internal/request"
 )
 
 func main() {
@@ -32,10 +34,12 @@ func main() {
 			}
 			fmt.Println("Connection accepted...")
 
-			lines_channel := getLinesChannel(connection)
-			for line := range lines_channel {
-				fmt.Println(line)
+			r, err := request.RequestFromReader(connection)
+			if err != nil {
+				fmt.Println(err)
 			}
+
+			fmt.Printf("Request line:\n- Method: %s\n- Target: %s\n- Version: %s\n", r.RequestLine.Method, r.RequestLine.RequestTarget, r.RequestLine.HttpVersion)
 		}
 	}()
 
