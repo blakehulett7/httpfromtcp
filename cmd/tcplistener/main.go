@@ -8,8 +8,8 @@ import (
 )
 
 func main() {
-	ColorPrint(Blue, "Dominus Iesus Christus")
-	ColorPrint(Blue, "----------------------")
+	ColorPrint(Cyan, "Dominus Iesus Christus")
+	ColorPrint(Cyan, "----------------------")
 	fmt.Println()
 
 	port := ":42069"
@@ -18,7 +18,7 @@ func main() {
 		panic(err)
 	}
 	defer listener.Close()
-	ColorPrint(Magenta, fmt.Sprintf("Listening on port %s", port))
+	ColorPrint(Blue, fmt.Sprintf("Listening on port %s", port))
 	fmt.Println()
 
 	done_chan := make(chan os.Signal, 1)
@@ -42,6 +42,6 @@ func main() {
 	<-done_chan
 
 	fmt.Println()
-	ColorPrint(Blue, "------------------")
-	ColorPrint(Blue, "Et Spiritus Sancti")
+	ColorPrint(Cyan, "------------------")
+	ColorPrint(Cyan, "Et Spiritus Sancti")
 }
