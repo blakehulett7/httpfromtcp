@@ -2,7 +2,9 @@ package headers
 
 import (
 	"fmt"
+	"slices"
 	"strings"
+	"unicode"
 )
 
 type Headers map[string]string
@@ -16,13 +18,28 @@ func (h Headers) Parse(data []byte) error {
 		return fmt.Errorf("invalid header, no colons... line: %s", line)
 	}
 
-	key := parts[0]
-	if strings.HasSuffix(key, " ") {
-		return fmt.Errorf("invalid key format, whitespace detected between key and colon... key: %s", key)
+	key := strings.ToLower(parts[0])
+	if !keyIsValid(key) {
+		return fmt.Errorf("invalid key format: %s", key)
 	}
 
 	value := strings.TrimSpace(parts[1])
 	h[key] = value
 
 	return nil
+}
+
+func keyIsValid(key string) bool {
+	if strings.HasSuffix(key, " ") {
+		return false
+	}
+
+	special_characters := []rune{'!', '#', '$', '%', '&', '\'', '*', '+', '-', '.', '^', '_', '`', '|', '~'}
+	for _, c := range key {
+		if !unicode.IsLetter(c) && !unicode.IsDigit(c) && !slices.Contains(special_characters, c) {
+			return false
+		}
+	}
+
+	return true
 }
