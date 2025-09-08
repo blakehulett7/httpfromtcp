@@ -24,6 +24,11 @@ func (h Headers) Parse(data []byte) error {
 	}
 
 	value := strings.TrimSpace(parts[1])
+	current_value, exists := h[key]
+	if exists {
+		value = fmt.Sprintf("%s, %s", current_value, value)
+	}
+
 	h[key] = value
 
 	return nil
