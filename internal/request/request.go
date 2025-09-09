@@ -7,8 +7,6 @@ import (
 	"unicode"
 )
 
-const buffer_size = 8
-
 type Request struct {
 	RequestLine RequestLine
 }
