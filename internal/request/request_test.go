@@ -1,6 +1,7 @@
 package request
 
 import (
+	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -29,6 +30,17 @@ func (cr *chunkReader) Read(p []byte) (n int, err error) {
 	cr.pos += n
 
 	return n, nil
+}
+
+func TestReadLine(t *testing.T) {
+	reader := &chunkReader{
+		data:            "GET /coffee HTTP/1.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n",
+		numBytesPerRead: len([]byte("GET /coffee HTTP/1.1\r\nHost: localhost:42069\r\nUser-Agent: curl/7.81.0\r\nAccept: */*\r\n\r\n")),
+	}
+	buffer := NewBuffer()
+
+	line, err := buffer.readLine(reader)
+	fmt.Println(buffer.Data, buffer.Cursor, line, err)
 }
 
 func TestRequestLineParse(t *testing.T) {
