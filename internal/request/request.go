@@ -5,10 +5,13 @@ import (
 	"io"
 	"strings"
 	"unicode"
+
+	h "github.com/blakehulett7/httpfromtcp/internal/headers"
 )
 
 type Request struct {
 	RequestLine RequestLine
+	Headers     h.Headers
 }
 
 type RequestLine struct {
@@ -18,36 +21,27 @@ type RequestLine struct {
 }
 
 func RequestFromReader(reader io.Reader) (*Request, error) {
-	buffer := make([]byte, buffer_size)
-	read_to_idx := 0
+	buffer := NewBuffer()
 
-	for !strings.Contains(string(buffer), "\r\n") {
-		if len(buffer) > cap(buffer)/2 {
-			larger_buffer := make([]byte, cap(buffer)*2)
-			copy(larger_buffer, buffer)
-			buffer = larger_buffer
-		}
-
-		bytes_read, err := reader.Read(buffer[read_to_idx:])
-		if err == io.EOF {
-			break
-		}
-
-		if err != nil {
-			return &Request{}, err
-		}
-
-		read_to_idx += bytes_read
+	raw_request_line, err := buffer.readLine(reader)
+	request_line, err := parseRequestLine(raw_request_line)
+	if err == io.EOF {
+		return &Request{}, fmt.Errorf("malformed request... no host")
 	}
 
-	parts := strings.Split(string(buffer), "\r\n")
-	raw_request_line := parts[0]
-	request_line, err := parseRequestLine(raw_request_line)
 	if err != nil {
 		return &Request{}, err
 	}
 
-	return &Request{request_line}, nil
+	headers, err := parseHeaders(&buffer, reader)
+	if err != nil {
+		return &Request{}, err
+	}
+
+	return &Request{
+		RequestLine: request_line,
+		Headers:     headers,
+	}, nil
 }
 
 func parseRequestLine(line string) (RequestLine, error) {
@@ -73,6 +67,38 @@ func parseRequestLine(line string) (RequestLine, error) {
 		RequestTarget: parts[1],
 		Method:        method,
 	}, nil
+}
+
+func parseHeaders(b *buffer, reader io.Reader) (h.Headers, error) {
+	headers := h.Headers{}
+
+	line, err := b.readLine(reader)
+	if err != nil {
+		return h.Headers{}, err
+	}
+
+	for line != "" {
+		fmt.Println()
+		fmt.Println("Starting iteration...")
+		fmt.Printf("Line: %s\n", line)
+		fmt.Println("Parsing header")
+		headers.Parse(line)
+		fmt.Printf("Headers: %v\n", headers)
+
+		fmt.Println("Reading next line")
+		line, err = b.readLine(reader)
+		if err != nil {
+			return h.Headers{}, err
+		}
+		fmt.Printf("Next line: %s\n", line)
+		fmt.Println()
+	}
+
+	if len(headers) == 0 {
+		return h.Headers{}, fmt.Errorf("empty or malformed headers")
+	}
+
+	return headers, nil
 }
 
 func containsOnlyCapitalLetters(s string) bool {

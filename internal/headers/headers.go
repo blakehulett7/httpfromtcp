@@ -9,8 +9,7 @@ import (
 
 type Headers map[string]string
 
-func (h Headers) Parse(data []byte) error {
-	line := string(data)
+func (h Headers) Parse(line string) error {
 	line = strings.TrimSpace(line)
 	parts := strings.SplitN(line, ":", 2)
 

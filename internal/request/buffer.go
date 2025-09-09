@@ -62,7 +62,7 @@ func (b *buffer) readLine(reader io.Reader) (string, error) {
 			line := string(b.Data)
 			fmt.Printf("Stringified: %s\n", string(b.Data))
 			b.clear()
-			return line, nil
+			return line, err
 		}
 
 		if err != nil {
