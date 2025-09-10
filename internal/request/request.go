@@ -40,6 +40,8 @@ func RequestFromReader(reader io.Reader) (*Request, error) {
 		return &Request{}, err
 	}
 
+	fmt.Println("Parsing Body...")
+
 	body, err := parseBody(&buffer, reader, headers)
 	if err != nil {
 		return &Request{}, err
@@ -119,6 +121,8 @@ func parseBody(b *buffer, reader io.Reader, headers h.Headers) ([]byte, error) {
 	if err != nil {
 		return []byte{}, fmt.Errorf("invalid content length")
 	}
+
+	fmt.Println("Boutta read...")
 
 	body, err := b.readRemaining(reader)
 

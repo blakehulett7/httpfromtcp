@@ -89,10 +89,30 @@ func (b *buffer) readLine(reader io.Reader) (string, error) {
 }
 
 func (b *buffer) readRemaining(r io.Reader) ([]byte, error) {
+	fmt.Println("Time to read...")
+
 	is_eof := false
 	for !is_eof {
+		if len(b.Data) <= b.Cursor {
+			fmt.Printf("Buffer too small... len: %d, cursor: %d\n", len(b.Data), b.Cursor)
+			fmt.Println("Enlarging buffer size")
+			larger_buffer := make([]byte, len(b.Data)*2)
+			copy(larger_buffer, b.Data)
+			b.Data = larger_buffer
+			fmt.Println("Buffer enlarged")
+			fmt.Printf("New buffer size: %d\n", len(b.Data))
+			fmt.Printf("New buffer: %v\n", b.Data)
+		}
+
+		fmt.Println("Starting data iteration")
+
+		fmt.Printf("Current Data: %v\n", b.Data)
+		fmt.Printf("Current Cursor position: %d\n", b.Cursor)
+		fmt.Println("Reading new data...")
 		bytes_read, err := r.Read(b.Data[b.Cursor:])
 		b.Cursor += bytes_read
+		fmt.Printf("New Cursor position: %d\n", b.Cursor)
+		fmt.Printf("New Data: %v\n", b.Data)
 
 		if err == io.EOF {
 			is_eof = true
@@ -102,7 +122,6 @@ func (b *buffer) readRemaining(r io.Reader) ([]byte, error) {
 		if err != nil {
 			return []byte{}, err
 		}
-
 	}
 
 	return b.Data[:b.Cursor], nil
