@@ -33,6 +33,16 @@ func (h Headers) Parse(line string) error {
 	return nil
 }
 
+func (h Headers) Get(key string) string {
+	raw, exists := h[key]
+	if !exists {
+		return ""
+	}
+
+	values := strings.Split(raw, ",")
+	return values[0]
+}
+
 func keyIsValid(key string) bool {
 	if strings.HasSuffix(key, " ") {
 		return false

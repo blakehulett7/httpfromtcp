@@ -87,3 +87,23 @@ func (b *buffer) readLine(reader io.Reader) (string, error) {
 
 	return line, nil
 }
+
+func (b *buffer) readRemaining(r io.Reader) ([]byte, error) {
+	is_eof := false
+	for !is_eof {
+		bytes_read, err := r.Read(b.Data[b.Cursor:])
+		b.Cursor += bytes_read
+
+		if err == io.EOF {
+			is_eof = true
+			break
+		}
+
+		if err != nil {
+			return []byte{}, err
+		}
+
+	}
+
+	return b.Data[:b.Cursor], nil
+}

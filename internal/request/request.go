@@ -3,6 +3,7 @@ package request
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -12,6 +13,7 @@ import (
 type Request struct {
 	RequestLine RequestLine
 	Headers     h.Headers
+	Body        []byte
 }
 
 type RequestLine struct {
@@ -38,9 +40,15 @@ func RequestFromReader(reader io.Reader) (*Request, error) {
 		return &Request{}, err
 	}
 
+	body, err := parseBody(&buffer, reader, headers)
+	if err != nil {
+		return &Request{}, err
+	}
+
 	return &Request{
 		RequestLine: request_line,
 		Headers:     headers,
+		Body:        body,
 	}, nil
 }
 
@@ -99,6 +107,28 @@ func parseHeaders(b *buffer, reader io.Reader) (h.Headers, error) {
 	}
 
 	return headers, nil
+}
+
+func parseBody(b *buffer, reader io.Reader, headers h.Headers) ([]byte, error) {
+	content_length_raw := headers.Get("content-length")
+	if content_length_raw == "" {
+		return []byte{}, nil
+	}
+
+	content_length, err := strconv.Atoi(content_length_raw)
+	if err != nil {
+		return []byte{}, fmt.Errorf("invalid content length")
+	}
+
+	body, err := b.readRemaining(reader)
+
+	fmt.Printf("content-length: %d, actual length: %d\n", content_length, len(body))
+
+	if len(body) != content_length {
+		return []byte{}, fmt.Errorf("length of the body does not match the given content-length")
+	}
+
+	return body, err
 }
 
 func containsOnlyCapitalLetters(s string) bool {
