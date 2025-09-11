@@ -29,20 +29,22 @@ func Serve(port int) (*Server, error) {
 }
 
 func (s *Server) Close() error {
-	s.isClosed.Swap(true)
+	s.isClosed.Store(true)
 	return s.listener.Close()
 }
 
 func (s *Server) listen() {
 	for {
-		if s.isClosed.Load() {
-			fmt.Println("leaving")
-			return
-		}
-
 		conn, err := s.listener.Accept()
+
 		if err != nil {
+			if s.isClosed.Load() {
+				fmt.Println("leaving")
+				return
+			}
+
 			fmt.Println(err)
+			continue
 		}
 
 		go s.handle(conn)
