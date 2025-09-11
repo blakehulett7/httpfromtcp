@@ -43,6 +43,11 @@ func (h Headers) Get(key string) string {
 	return values[0]
 }
 
+func (h Headers) Set(key, value string) {
+	key = strings.ToLower(key)
+	h[key] = value
+}
+
 func keyIsValid(key string) bool {
 	if strings.HasSuffix(key, " ") {
 		return false

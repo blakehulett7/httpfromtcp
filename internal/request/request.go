@@ -40,7 +40,7 @@ func RequestFromReader(reader io.Reader) (*Request, error) {
 		return &Request{}, err
 	}
 
-	fmt.Println("Parsing Body...")
+	//fmt.Println("Parsing Body...")
 
 	body, err := parseBody(&buffer, reader, headers)
 	if err != nil {
@@ -88,20 +88,24 @@ func parseHeaders(b *buffer, reader io.Reader) (h.Headers, error) {
 	}
 
 	for line != "" {
-		fmt.Println()
-		fmt.Println("Starting iteration...")
-		fmt.Printf("Line: %s\n", line)
-		fmt.Println("Parsing header")
-		headers.Parse(line)
-		fmt.Printf("Headers: %v\n", headers)
 
-		fmt.Println("Reading next line")
+		/*
+			fmt.Println()
+			fmt.Println("Starting iteration...")
+			fmt.Printf("Line: %s\n", line)
+			fmt.Println("Parsing header")
+		*/
+
+		headers.Parse(line)
+		//fmt.Printf("Headers: %v\n", headers)
+
+		//fmt.Println("Reading next line")
 		line, err = b.readLine(reader)
 		if err != nil {
 			return h.Headers{}, err
 		}
-		fmt.Printf("Next line: %s\n", line)
-		fmt.Println()
+		//fmt.Printf("Next line: %s\n", line)
+		//fmt.Println()
 	}
 
 	if len(headers) == 0 {
@@ -122,11 +126,11 @@ func parseBody(b *buffer, reader io.Reader, headers h.Headers) ([]byte, error) {
 		return []byte{}, fmt.Errorf("invalid content length")
 	}
 
-	fmt.Println("Boutta read...")
+	//fmt.Println("Boutta read...")
 
 	body, err := b.readRemaining(reader)
 
-	fmt.Printf("content-length: %d, actual length: %d\n", content_length, len(body))
+	//fmt.Printf("content-length: %d, actual length: %d\n", content_length, len(body))
 
 	if len(body) != content_length {
 		return []byte{}, fmt.Errorf("length of the body does not match the given content-length")

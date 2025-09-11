@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"os/signal"
@@ -14,6 +13,7 @@ import (
 )
 
 const port = 42069
+const dir = "./cmd/httpserver"
 
 func main() {
 	server, err := server.Serve(port, handler)
@@ -29,21 +29,51 @@ func main() {
 	log.Println("Server gracefully stopped")
 }
 
-func handler(w io.Writer, r *request.Request) *server.HandlerError {
+func handler(w *response.Writer, r *request.Request) {
 	if r.RequestLine.RequestTarget == "/yourproblem" {
-		return &server.HandlerError{
-			StatusCode: response.StatusBadRequest,
-			Error:      fmt.Errorf("Your problem is not my problem\n"),
+		path := fmt.Sprintf("%s/html/bad_request.html", dir)
+		bad_request, err := os.ReadFile(path)
+		if err != nil {
+			fmt.Println(err)
+			return
 		}
+
+		h_err := response.HandlerError{
+			StatusCode: response.StatusBadRequest,
+			Error:      fmt.Errorf(string(bad_request)),
+		}
+
+		w.WriteError(h_err, "text/html")
+		return
 	}
 
 	if r.RequestLine.RequestTarget == "/myproblem" {
-		return &server.HandlerError{
-			StatusCode: response.StatusInternalServerError,
-			Error:      fmt.Errorf("Woopsie, my bad\n"),
+		path := fmt.Sprintf("%s/html/internal_error.html", dir)
+		internal_error, err := os.ReadFile(path)
+		if err != nil {
+			fmt.Println(err)
+			return
 		}
+
+		h_err := response.HandlerError{
+			StatusCode: response.StatusInternalServerError,
+			Error:      fmt.Errorf(string(internal_error)),
+		}
+
+		w.WriteError(h_err, "text/html")
+		return
 	}
 
-	w.Write([]byte("All good, frfr\n"))
-	return nil
+	path := fmt.Sprintf("%s/html/ok.html", dir)
+	data, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	w.WriteStatusLine(response.StatusOK)
+	w.Headers = response.GetDefaultHeaders(len(data))
+	w.Headers.Set("content-type", "text/html")
+	w.WriteHeaders()
+	w.WriteBody(data)
 }

@@ -1,7 +1,6 @@
 package server
 
 import (
-	"bytes"
 	"fmt"
 	"net"
 	"sync/atomic"
@@ -56,22 +55,12 @@ func (s *Server) listen(h Handler) {
 func (s *Server) handle(conn net.Conn, h Handler) {
 	defer conn.Close()
 
+	w := response.NewWriter(conn)
 	r, err := request.RequestFromReader(conn)
 	if err != nil {
-		writeError(conn, &HandlerError{StatusCode: response.StatusBadRequest, Error: err})
+		w.WriteError(response.HandlerError{StatusCode: response.StatusBadRequest, Error: err}, "text/plain")
 		return
 	}
 
-	buffer := bytes.NewBuffer(nil)
-	h_err := h(buffer, r)
-	if h_err != nil {
-		writeError(conn, h_err)
-		return
-	}
-
-	data := buffer.Bytes()
-
-	response.WriteStatusLine(conn, response.StatusOK)
-	response.WriteHeaders(conn, response.GetDefaultHeaders(len(data)))
-	conn.Write(data)
+	h(w, r)
 }

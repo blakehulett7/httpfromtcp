@@ -17,9 +17,9 @@ const (
 
 func GetDefaultHeaders(content_length int) h.Headers {
 	return h.Headers{
-		"Content-Length": fmt.Sprint(content_length),
-		"Connection":     "close",
-		"Content-Type":   "text/plain",
+		"content-length": fmt.Sprint(content_length),
+		"connection":     "close",
+		"content-type":   "text/plain",
 	}
 }
 
