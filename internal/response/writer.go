@@ -100,7 +100,10 @@ func (w *Writer) WriteChunkedBodyDone() (int, error) {
 
 func (w *Writer) WriteTrailers(h h.Headers) error {
 	w.Headers = h
-	w.WriteHeaders()
+	return w.WriteHeaders()
+}
+
+func (w *Writer) WriteEnd() error {
 	_, err := w.writer.Write([]byte("\r\n"))
 	return err
 }
