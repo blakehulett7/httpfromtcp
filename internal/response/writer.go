@@ -18,6 +18,7 @@ const (
 	Waiting writerState = iota
 	StatusLineWritten
 	HeadersWritten
+	BodyWritten
 	Done
 )
 
@@ -49,7 +50,7 @@ func (w *Writer) WriteStatusLine(status_code StatusCode) error {
 }
 
 func (w *Writer) WriteHeaders() error {
-	if w.state != StatusLineWritten {
+	if w.state != StatusLineWritten && w.state != BodyWritten {
 		return fmt.Errorf("WriteHeaders must be called directly after WriteStatusLine")
 	}
 
@@ -72,8 +73,7 @@ func (w *Writer) WriteBody(data []byte) (int, error) {
 		return bytes_written, err
 	}
 
-	w.state = Done
-	w.state = Waiting
+	w.state = BodyWritten
 
 	return bytes_written, nil
 }
@@ -85,4 +85,22 @@ func (w *Writer) WriteError(err HandlerError, content_type string) {
 	w.Headers.Set("Content-Type", content_type)
 	w.WriteHeaders()
 	w.writer.Write(message)
+}
+
+func (w *Writer) WriteChunkedBody(data []byte) (int, error) {
+	w.writer.Write(fmt.Appendf(nil, "%x\r\n", len(data)))
+	w.writer.Write(data)
+	return w.writer.Write([]byte("\r\n"))
+}
+
+func (w *Writer) WriteChunkedBodyDone() (int, error) {
+	w.state = BodyWritten
+	return w.writer.Write([]byte("0\r\n"))
+}
+
+func (w *Writer) WriteTrailers(h h.Headers) error {
+	w.Headers = h
+	w.WriteHeaders()
+	_, err := w.writer.Write([]byte("\r\n"))
+	return err
 }
